@@ -1,0 +1,173 @@
+# GraphQL Schema for User, Product, Category Management
+
+# Scalar types
+scalar DateTime
+
+# User Type
+type User {
+    id: ID!
+    username: String!
+    email: String!
+    fullName: String
+    phone: String
+    avatar: String
+    roleId: Int!
+    createdAt: DateTime
+    updatedAt: DateTime
+    products: [Product]
+}
+
+# Category Type
+type Category {
+    id: ID!
+    name: String!
+    description: String
+    userId: ID!
+    createdAt: DateTime
+    updatedAt: DateTime
+    icon: String
+    products: [Product]
+    productCount: Int
+}
+
+# Product Type
+type Product {
+    productId: ID!
+    productName: String!
+    description: String
+    unitPrice: Float!
+    quantity: Int!
+    discount: Float
+    images: String
+    status: Boolean!
+    createDate: DateTime
+    categoryId: ID!
+    userId: ID
+    category: Category
+    user: User
+    finalPrice: Float
+}
+
+# Input Types for Mutations
+input UserInput {
+    username: String!
+    password: String!
+    email: String!
+    fullName: String
+    phone: String
+    avatar: String
+    roleId: Int!
+}
+
+input UserUpdateInput {
+    username: String
+    password: String
+    email: String
+    fullName: String
+    phone: String
+    avatar: String
+    roleId: Int
+}
+
+input CategoryInput {
+    name: String!
+    description: String
+    userId: ID!
+    icon: String
+}
+
+input CategoryUpdateInput {
+    name: String
+    description: String
+    icon: String
+}
+
+input ProductInput {
+    productName: String!
+    description: String
+    unitPrice: Float!
+    quantity: Int!
+    discount: Float
+    images: String
+    categoryId: ID!
+    userId: ID
+}
+
+input ProductUpdateInput {
+    productName: String
+    description: String
+    unitPrice: Float
+    quantity: Int
+    discount: Float
+    images: String
+    status: Boolean
+    categoryId: ID
+}
+
+# Query Type - Define all read operations
+type Query {
+    # User Queries
+    users: [User]
+    user(id: ID!): User
+    userByUsername(username: String!): User
+    usersByRole(roleId: Int!): [User]
+    searchUsersByName(name: String!): [User]
+    
+    # Category Queries
+    categories: [Category]
+    category(id: ID!): Category
+    categoryByName(name: String!): Category
+    categoriesByUser(userId: ID!): [Category]
+    categoriesWithProducts: [Category]
+    searchCategoriesByName(name: String!): [Category]
+    
+    # Product Queries
+    products: [Product]
+    product(id: ID!): Product
+    productByName(name: String!): Product
+    
+    # YÊU CẦU CHÍNH: Products ordered by price (low to high)
+    productsOrderByPrice: [Product]
+    
+    # YÊU CẦU CHÍNH: Products by category
+    productsByCategory(categoryId: ID!): [Product]
+    
+    # Additional Product Queries
+    productsByUser(userId: ID!): [Product]
+    searchProductsByName(name: String!): [Product]
+    productsByPriceRange(minPrice: Float!, maxPrice: Float!): [Product]
+    productsWithDiscount: [Product]
+    featuredProducts: [Product]
+    newestProducts: [Product]
+    lowStockProducts(threshold: Int!): [Product]
+    searchProducts(name: String, categoryId: ID, minPrice: Float, maxPrice: Float): [Product]
+}
+
+# Mutation Type - Define all write operations (CRUD)
+type Mutation {
+    # User Mutations
+    createUser(input: UserInput!): User
+    updateUser(id: ID!, input: UserUpdateInput!): User
+    deleteUser(id: ID!): Boolean
+    
+    # Category Mutations
+    createCategory(input: CategoryInput!): Category
+    updateCategory(id: ID!, input: CategoryUpdateInput!): Category
+    deleteCategory(id: ID!): Boolean
+    
+    # Product Mutations
+    createProduct(input: ProductInput!): Product
+    updateProduct(id: ID!, input: ProductUpdateInput!): Product
+    deleteProduct(id: ID!): Boolean
+    
+    # Additional Product Operations
+    updateProductStock(id: ID!, quantity: Int!): Product
+    applyDiscount(id: ID!, discountPercent: Float!): Product
+    toggleProductStatus(id: ID!): Product
+}
+
+# Root Schema
+schema {
+    query: Query
+    mutation: Mutation
+}
