@@ -55,14 +55,15 @@ public class CategoryService {
                 .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
         
         // Check if name is being changed and if new name exists for the user
-        if (!category.getName().equals(categoryDetails.getName()) && 
+        if (categoryDetails.getName() != null &&
+            !category.getName().equals(categoryDetails.getName()) &&
             categoryRepository.existsByNameAndUserId(categoryDetails.getName(), category.getUserId())) {
             throw new RuntimeException("Category name already exists for this user: " + categoryDetails.getName());
         }
         
-        category.setName(categoryDetails.getName());
-        category.setDescription(categoryDetails.getDescription());
-        category.setIcon(categoryDetails.getIcon());
+        if (categoryDetails.getName() != null) category.setName(categoryDetails.getName());
+        if (categoryDetails.getDescription() != null) category.setDescription(categoryDetails.getDescription());
+        if (categoryDetails.getIcon() != null) category.setIcon(categoryDetails.getIcon());
         
         return categoryRepository.save(category);
     }

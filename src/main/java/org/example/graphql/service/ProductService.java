@@ -2,6 +2,7 @@ package org.example.graphql.service;
 
 import org.example.graphql.entity.Product;
 import org.example.graphql.repository.ProductRepository;
+import org.example.graphql.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,15 +16,27 @@ public class ProductService {
     
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
     
     // Create product
     public Product createProduct(Product product) {
-        // Validate product data
-        if (product.getUnitPrice() <= 0) {
-            throw new RuntimeException("Product price must be greater than 0");
+        // Validate required fields
+        if (product.getProductName() == null || product.getProductName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Product name is required");
         }
-        if (product.getQuantity() < 0) {
-            throw new RuntimeException("Product quantity cannot be negative");
+        if (product.getUnitPrice() == null || product.getUnitPrice() <= 0) {
+            throw new IllegalArgumentException("Product price must be greater than 0");
+        }
+        if (product.getQuantity() == null || product.getQuantity() < 0) {
+            throw new IllegalArgumentException("Product quantity cannot be negative");
+        }
+        if (product.getCategoryId() == null) {
+            throw new IllegalArgumentException("Category is required");
+        }
+        if (!categoryRepository.existsById(product.getCategoryId())) {
+            throw new IllegalArgumentException("Category not found with id: " + product.getCategoryId());
         }
         
         return productRepository.save(product);
@@ -64,22 +77,25 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
         
-        // Validate updated data
-        if (productDetails.getUnitPrice() <= 0) {
-            throw new RuntimeException("Product price must be greater than 0");
+        // Validate updated data only when provided
+        if (productDetails.getUnitPrice() != null && productDetails.getUnitPrice() <= 0) {
+            throw new IllegalArgumentException("Product price must be greater than 0");
         }
-        if (productDetails.getQuantity() < 0) {
-            throw new RuntimeException("Product quantity cannot be negative");
+        if (productDetails.getQuantity() != null && productDetails.getQuantity() < 0) {
+            throw new IllegalArgumentException("Product quantity cannot be negative");
+        }
+        if (productDetails.getCategoryId() != null && !categoryRepository.existsById(productDetails.getCategoryId())) {
+            throw new IllegalArgumentException("Category not found with id: " + productDetails.getCategoryId());
         }
         
-        product.setProductName(productDetails.getProductName());
-        product.setDescription(productDetails.getDescription());
-        product.setUnitPrice(productDetails.getUnitPrice());
-        product.setQuantity(productDetails.getQuantity());
-        product.setDiscount(productDetails.getDiscount());
-        product.setImages(productDetails.getImages());
-        product.setStatus(productDetails.getStatus());
-        product.setCategoryId(productDetails.getCategoryId());
+        if (productDetails.getProductName() != null) product.setProductName(productDetails.getProductName());
+        if (productDetails.getDescription() != null) product.setDescription(productDetails.getDescription());
+        if (productDetails.getUnitPrice() != null) product.setUnitPrice(productDetails.getUnitPrice());
+        if (productDetails.getQuantity() != null) product.setQuantity(productDetails.getQuantity());
+        if (productDetails.getDiscount() != null) product.setDiscount(productDetails.getDiscount());
+        if (productDetails.getImages() != null) product.setImages(productDetails.getImages());
+        if (productDetails.getStatus() != null) product.setStatus(productDetails.getStatus());
+        if (productDetails.getCategoryId() != null) product.setCategoryId(productDetails.getCategoryId());
         
         return productRepository.save(product);
     }
@@ -165,7 +181,7 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
         
         if (newQuantity < 0) {
-            throw new RuntimeException("Product quantity cannot be negative");
+            throw new IllegalArgumentException("Product quantity cannot be negative");
         }
         
         product.setQuantity(newQuantity);
@@ -178,7 +194,7 @@ public class ProductService {
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
         
         if (discountPercent < 0 || discountPercent > 100) {
-            throw new RuntimeException("Discount must be between 0 and 100 percent");
+            throw new IllegalArgumentException("Discount must be between 0 and 100 percent");
         }
         
         product.setDiscount(discountPercent);
